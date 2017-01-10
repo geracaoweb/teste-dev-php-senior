@@ -15,7 +15,7 @@ class Database
     public static function getConnection()
     {
         if (self::$conn === NULL) {
-            $dsn = 'sqlite:/var/www/app/db/task.sqlite';
+            $dsn = 'sqlite:/var/www/html/db/task.sqlite';
             self::$conn = new PDO($dsn);
 
             if(!self::$conn) {

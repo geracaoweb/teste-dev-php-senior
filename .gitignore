@@ -1,3 +1,5 @@
-vendor
-db/task.sqlite
+app/vendor
+app/db/task.sqlite
+data
 .idea
+Logs
