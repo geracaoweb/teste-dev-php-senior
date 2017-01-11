@@ -1,13 +1,7 @@
 <?php
 
-date_default_timezone_set('UTC');
-
-require_once __DIR__.'/../vendor/autoload.php';
-
-$app = new Silex\Application();
-
-$app['debug'] = true;
-
-$app->mount('/', new \Acme\Task\Controller\TaskController());
+require_once __DIR__ . '/../src/Configs/Bootstrap.php';
+require_once __DIR__ . '/../src/Configs/Routes.php'; ///var/www/html/web/../src/Configs/Boostrap.php
+//require_once __DIR__ . '/../vendor/autoload.php';
 
 $app->run();
