@@ -10,7 +10,7 @@ use Acme\Models\TaskModel;
 use Acme\Models\Entity\Task;
 
 class TaskController implements ControllerProviderInterface {
-
+    
     /**
     * Route Connector do Controller de Tasks
     * @param  Application $app [description]
@@ -18,30 +18,40 @@ class TaskController implements ControllerProviderInterface {
     */
     public function connect(Application $app) {
         $tasks = $app['controllers_factory'];
-
+        
         /**
-         * Retorna todas as tarefas
-         * @var [type]
-         */
+        * Retorna todas as tarefas
+        * @var [type]
+        */
         $tasks->get('/', function(Application $app) {
             $response = (new TaskModel())->getTodosDoBanco();
             return $app->json($response);
         });
-
+        
+        
         /**
-         * Adiciona um registro
-         */
-        $tasks->post('/add', function (Request $request) use ($app) {
+        * Retorna todas as tarefas
+        * @var [type]
+        */
+        $tasks->get('/{id}', function(Application $app, $id) {
+            $response = (new TaskModel())->getTodosDoBanco();
+            return $app->json($response);
+        });
+        
+        /**
+        * Adiciona um registro
+        */
+        $tasks->post('/', function (Request $request) use ($app) {
             $data = (object) $request->request->all(); // Pegando já os dados tratados com o uso do Request
-
+            
             $task = new Task();
             $task->setDescription($data->titulo)
-                ->setMessage($data->mensagem);
-
+            ->setMessage($data->mensagem);
+            
             $novaTask = (new TaskModel())->save($task);
             return $app->json($novaTask->getValues());
         });
-
+        
         return $tasks;
     }
 }

@@ -13,14 +13,27 @@ $app = new Application();
 $app['debug'] = True;
 
 /**
- * Serviço do Doctrine - SQLite3
+ * Serviço do Doctrine - MySQL
  */
 $app->register(new Silex\Provider\DoctrineServiceProvider(), array(
-    'db.options' => array(
-        'driver'   => 'pdo_sqlite',
-        'path'     => __DIR__.'/../../db/task.sqlite',
-    ),
+  'db.options' => array(
+    'driver'    => "pdo_mysql",
+    'host'      => "mysql",
+    'port'      => "3306",
+    'dbname'    => "tasks",
+    'user'      => "root",
+    'password'  => "root"
+  ),
 ));
+/**
+ * Middleware = Content-Type: application/json
+ */
+$app->before(function (Request $request) {
+    if (0 === strpos($request->headers->get('Content-Type'), 'application/json')) {
+        $data = json_decode($request->getContent(), true);
+        $request->request->replace(is_array($data) ? $data : array());
+    }
+});
 
 /**
  * [$error Vai customizar a devolução de erros das Exceptions em formato JSON]

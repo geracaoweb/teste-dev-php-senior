@@ -29,25 +29,33 @@ Você poderia separar também um arquivo de rotas, que vai agrupar em um lugar u
 
 Achei sua organização um pouco bagunçada, acho que tem que melhorar bastante ai, meu jovem... Você optou por utilizar um padrão semelhante a App\Funcionalidade\Controller(Model) Ela até pode ser funcional, mas no seu lugar eu optaria por utilizar um padrão App\Controllers(Models, Views, Utils)\Classe.
 
+* Bootstrap
+
+Seria bacana você adicionar uma camada na arquitetura da API em que ela carreta todos os componentes dentro da instância de Application. Isso de da mais liberadade de adicionar e remover ferramentas e camadas no seu projeto conforme ele for crescendo ou escalando. 
+
+
+
 * Controllers
 
-Por que não utilizar todos os recursos do SilexPHP para gerenciar as rotas da API? Ao invés de usar o Método connect do Silex dentro da classe para instanciar a mesma classe e chamar um método, podemos realizar essa operação direto, sem precisar dessa solução estranha. Olha só:
+Por que não utilizar todos os recursos do SilexPHP e boas práticas do próprio REST para gerenciar as rotas da API? Ao invés de usar o Método connect do Silex dentro da classe para instanciar a mesma classe e chamar um método, podemos realizar essa operação direto, sem precisar dessa solução estranha. Olha só:
 
 Antes para chamar um método de acordo com a rota solicitada, tinhamos nosso método Connect quer recebia a requisição e passava para uma action da mesma classe. E no final ainda tivemos que utilizar um componente do Symfony, o JsonResponse para retornar o conteúdo solicitado. Isso funciona bem! Mas estamos utilizando o Micro Framework e podemos utilizar algumas soluções próprias do mesmo para não ficar dependendo de muita coisa desnecessária. No caso, poderiamos utilizar um método do Application chamado json, ficando $app->json;
 
+Para manter coerência na API, vamos tratar nosso resource ```task``` uniforme, de uma forma que não seja acessível mais pela ```/``` e sim por um endpoint intuitivo, como ```/tasks```
+
 Antes:
 
-```
+```php
  public function connect(Application $app) {
      $factory = $app['controllers_factory'];
      $factory->get('/','Acme\Task\Controller\TaskController::listAction');
-     $factory->post('/add','Acme\Task\Controller\TaskController::createAction');
+     $factory->post('/','Acme\Task\Controller\TaskController::createAction');
      return $factory;
 }
 ```
 
 
-```
+```php
 public function listAction()
 {
     $conn = Database::getConnection();
@@ -69,7 +77,7 @@ public function listAction()
 
 Depois:
 
-```
+```php
 public function connect(Application $app) {
     $tasks = $app['controllers_factory'];
 
@@ -94,6 +102,34 @@ public function connect(Application $app) {
 }
 ```
 
+Temos que alterar também nosso arquivo de rotas. Tomei a liberadade de separar ele em um arquivo especialista em ```src/Configs/Routes.php```
+
+```php
+<?php
+
+/**
+ * Lista de rotas da aplicação. - Tasks
+ */
+$app->mount('/task', new \Acme\Controllers\TaskController());
+```
+
+* Content-Type/Json
+
+Notei que sua API foi construida para receber somente requisições no formato ```multipart/form-data``` ou ```application/x-www-form-urlencoded```. 
+Seria bacana adicionar um middleware para negociações de conteúdo baseadas em ```application/json``` lá no nosso Bootstrap.php
+
+```php
+/**
+ * Middleware = Content-Type: application/json
+ */
+$app->before(function (Request $request) {
+    if (0 === strpos($request->headers->get('Content-Type'), 'application/json')) {
+        $data = json_decode($request->getContent(), true);
+        $request->request->replace(is_array($data) ? $data : array());
+    }
+});
+```
+
 * Doctrine - Bancos de dados - Model
 
 Você aprendeu a usar bem o PDO, legal!! O PDO é fantástico mesmo, eu gosto muito e acho muito seguro!
@@ -101,7 +137,7 @@ Mas tem ferramentas ainda mais poderosas capazes de abstrair o PDO. Vamos utiliz
 O Doctrine já possui um Provider nativo do Doctrine. Dentro do Silex existe uma função register(), que
 tem a função de guardar em 'containers' as configurações dos nosso providers. Pra ficar BEM legal mesmo, por que você não troca aquela classe Database.php por um register do provider do Doctrine? Você leva de brinde um monte de métodos poderosos! Pra manter a linha de organização das depedencias das nossa ferramentas, vamos manter tudo lá no Bootstrap.php
 
-```
+```php
 $app->register(new Silex\Provider\DoctrineServiceProvider(), array(
     'db.options' => array(
         'driver'   => 'pdo_sqlite',
@@ -122,7 +158,7 @@ Crie uma classe abstrata que vai receber o objeto de conexão PDO do Doctrine e 
 
 Notei que no Add você tentou utilizar uma entidade da Task. Aquilo não fez sentido nenhum. Você nem precisaria utilizar um entidade aí. Sempre que quiser brincar com Entidades, use elas pra valer, e vá até o fim com a consistência delas. Usar pela metade é perda de tempo.
 
-```
+```php
 $title = isset($data['title']) ? $data['title'] : NULL;
 
 $task = new Task();
@@ -136,7 +172,9 @@ $stmt->execute();
 
 Você pode inclusive fazer as validações de algumas regras de negócio simples diretamente nas entidades, como no caso dos três caracteres do description
 
-```
+Antes:
+
+```php
 public function setDescription($description){
 
   if (strlen($description) < 3) {
@@ -148,6 +186,24 @@ public function setDescription($description){
 }
 ```
 
+Depois:
+
+```php
+        /**
+         * Adiciona um registro
+         */
+        $tasks->post('/', function (Request $request) use ($app) {
+            $data = (object) $request->request->all(); // Pegando já os dados tratados com o uso do Request
+
+            $task = new Task();
+            $task->setDescription($data->titulo)
+                ->setMessage($data->mensagem);
+
+            $novaTask = (new TaskModel())->save($task);
+            return $app->json($novaTask->getValues());
+        });
+```
+
 * Outras dicas
 
 Os erros da API do Silex são os erros padrão das bibliotecas de Request e Response do Symfony.
@@ -156,7 +212,7 @@ O ideal é retornar todos os tipos de erros via JSON também, assim nosso client
 No bootstrap você poderia adicionar uma configuração de erro do Application();
 Assim em todos os Exceptions a devolução vai ser um {msg: 'mensagem definida', status: 'codigo HTTP'}
 
-```
+```php
 /**
  * [$error Vai customizar a devolução de erros das Exceptions em formato JSON]
  */

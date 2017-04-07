@@ -2,9 +2,10 @@ FROM php:7.0-fpm
 MAINTAINER Matheus Fidelis <msfidelis01@gmail.com>
 
 RUN echo 'deb http://httpredir.debian.org/debian jessie contrib' >> /etc/apt/sources.list
+RUN echo 'deb http://packages.dotdeb.org jessie all' >> /etc/apt/sources.list
 
-RUN apt-get update && apt-get upgrade -y
-RUN export DEBIAN_FRONTEND=noninteractive && apt-get install -y --force-yes libssl-dev curl  libcurl4-gnutls-dev libxml2-dev libicu-dev libmcrypt-dev  libmemcached11 libmemcached-dev
+RUN apt-get update --force-yes
+RUN export DEBIAN_FRONTEND=noninteractive && apt-get install -y --force-yes openssl curl libmcrypt-dev libcurl4-gnutls-dev libxml2-dev libicu-dev 
 
 #CONFIGURAÇÕES DO OPCACHE
 RUN docker-php-ext-install opcache
@@ -13,11 +14,10 @@ RUN docker-php-ext-install opcache
 RUN pecl install apcu-5.1.5 && docker-php-ext-enable apcu
 
 #LIBS EXTRAS
+RUN apt-get install libmcrypt-dev libreadline-dev -y
 RUN docker-php-ext-install bcmath
-RUN apt-get install -y libbz2-dev
-RUN docker-php-ext-install bz2
+#RUN docker-php-ext-install bz2
 RUN docker-php-ext-install mbstring
-RUN apt-get install -y libmcrypt-dev
 RUN docker-php-ext-install mcrypt
 RUN apt-get install -y libpq-dev
 RUN apt-get install -y libicu-dev

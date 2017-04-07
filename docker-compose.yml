@@ -26,3 +26,15 @@ services:
     build: docker/composer
     volumes:
       - ./app:/home/web
+
+  mysql:
+    image: mysql:5.7
+    ports:
+      - "3306:3306"
+
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=tasks
+
+    volumes: 
+      - ./data:/var/lib/mysql
