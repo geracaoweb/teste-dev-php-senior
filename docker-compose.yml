@@ -2,7 +2,6 @@ version: '2'
 services:
   fpm:
     build: docker/php
-    restart: never
     volumes:
       - ./app:/var/www/html
     ports:
@@ -12,7 +11,6 @@ services:
 
   nginx:
     build: docker/Nginx
-    restart: never
     volumes:
       - ./docker/Nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./docker/Nginx/upx.conf:/etc/nginx/conf.d/upx.conf

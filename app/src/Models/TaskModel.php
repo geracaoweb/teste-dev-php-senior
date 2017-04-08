@@ -4,19 +4,9 @@ namespace Acme\Models;
 use Acme\System\Model;
 use Acme\Models\Entity\Task;
 
+use Acme\Models\TagModel;
+
 class TaskModel extends Model {
-
-  /**
-   * Cria a tabela de Tasks caso não exista
-   */
-  public function __construct() {
-    $queryCreate = "CREATE TABLE IF NOT EXISTS tasks (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      description TEXT,
-      message TEXT);";
-
-    $this->execute($queryCreate);
-  }
 
   /**
    * Tabela principal do model
@@ -36,6 +26,29 @@ class TaskModel extends Model {
   }
 
   /**
+   * Encontra uma task informada pelo ID
+   * @param [type] $id
+   * @return void
+   */
+  public function findrow($id) {
+    $query = $this->newQuery();
+    $query->select('*')
+      ->from($this->table)
+      ->where("id = {$id}")
+      ->setMaxResults(1);
+
+    $result = $this->execute($query);
+
+    if (!$result) {
+      return null;
+    } else {
+      $tags = (new TagModel())->findtags((int) $id);
+      $result[0]['tags'] = $tags;
+      return $result[0];
+    }
+  }
+
+  /**
    * Salva uma Task no banco de dados
    * @param  Task   $task [description]
    * @return [type]       [description]
@@ -49,5 +62,25 @@ class TaskModel extends Model {
       throw new \Exception("Impossível inserir a task", 1);
 
     }
+  }
+
+  /**
+   * Enexa uma Tag existente a a uma Task informada pelo id
+   * @param [int] $id_task id da task
+   * @param [int] $id_tag id da tag
+   * @return bool
+   */
+  public function anexarTag($id_task, $id_tag) {
+
+    $query = $this->newQuery();
+    $query->insert('tasks_has_tags')
+      ->values(
+        [
+        'id_tag' => $id_tag,
+        'id_task' => $id_task
+        ]
+      );
+    
+    $result = $this->execute($query);
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "upx/teste-backend",
   "description": "What can be better?",
-  "minimum-stability" : "stable",
+  "minimum-stability": "stable",
   "autoload": {
     "psr-4": {
       "Acme\\": [
@@ -14,6 +14,7 @@
     "php": ">=7",
     "doctrine/dbal": "~2.5",
     "symfony/console": "^3.2",
+    "doctrine/migrations": "^1.2.2",
     "silex/silex": "~2.0"
   },
   "require-dev": {

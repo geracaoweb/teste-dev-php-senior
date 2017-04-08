@@ -31,6 +31,12 @@ abstract class Model {
 		return new QueryBuilder(self::$db);
 	}
 
+	/**
+	 * Deleta um registro no banco
+	 * @param [type] $table
+	 * @param Array $where
+	 * @return void
+	 */
 	protected function DBDelete($table, Array $where) {
 		return self::$db->delete($table, $where);
 	}

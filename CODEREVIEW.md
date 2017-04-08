@@ -111,9 +111,9 @@ Temos que alterar também nosso arquivo de rotas. Tomei a liberadade de separar 
  * Lista de rotas da aplicação. - Tasks
  */
 $app->mount('/task', new \Acme\Controllers\TaskController());
-```
 
-* Content-Type/Json
+```
+* Content-Type/application/json
 
 Notei que sua API foi construida para receber somente requisições no formato ```multipart/form-data``` ou ```application/x-www-form-urlencoded```. 
 Seria bacana adicionar um middleware para negociações de conteúdo baseadas em ```application/json``` lá no nosso Bootstrap.php
@@ -137,14 +137,31 @@ Mas tem ferramentas ainda mais poderosas capazes de abstrair o PDO. Vamos utiliz
 O Doctrine já possui um Provider nativo do Doctrine. Dentro do Silex existe uma função register(), que
 tem a função de guardar em 'containers' as configurações dos nosso providers. Pra ficar BEM legal mesmo, por que você não troca aquela classe Database.php por um register do provider do Doctrine? Você leva de brinde um monte de métodos poderosos! Pra manter a linha de organização das depedencias das nossa ferramentas, vamos manter tudo lá no Bootstrap.php
 
+Poderiamos trocar também nosso banco para MySQL. Já te ajudei colocando isso no Docker também pra usar no ambiente de produção e até podemos fazer um deploy dele em produção. 
+
 ```php
+/**
+ * Serviço do Doctrine - MySQL
+ */
 $app->register(new Silex\Provider\DoctrineServiceProvider(), array(
-    'db.options' => array(
-        'driver'   => 'pdo_sqlite',
-        'path'     => __DIR__.'/../../db/task.sqlite',
-    ),
+  'db.options' => array(
+    'driver'    => "pdo_mysql",
+    'host'      => "mysql",
+    'port'      => "3306",
+    'dbname'    => "tasks",
+    'user'      => "root",
+    'password'  => "root"
+  ),
 ));
 ```
+
+Outra coisa que eu acho que você poderia melhorar é a forma como o banco é criado. Nesse caso podermos utilizar um esquema de migrations, que nos permite instalar, gerar seeds, versionar e até mesmo dar rollback caso algo dê errado. 
+Integrei o console do Symfony pra ajudar a gente com isso junto ao Doctrine. Para instalar o banco, basta executar 
+
+```
+    $ php console.php migrations:migrate
+```
+
 * Alguns problemas de encapsulamento.
 
 Juninho, seu código ficou bem simples, mas existem alguns Anti-Patterns bem nítidos alí.
@@ -221,5 +238,182 @@ $app->error(function (\Exception $e, Request $request, $code) use ($app) {
     return $app->json($error, $code);
 });
 ```
+
+* Requests
+
+### Listar todas as tasks
+
+```
+GET /task HTTP/1.1
+Host: localhost
+Cache-Control: no-cache
+```
+
+```bash
+$ curl -X GET localhost/task/
+
+HTTP/1.1 200 OK
+Server: nginx/1.6.2
+Content-Type: application/json
+Transfer-Encoding: chunked
+Connection: keep-alive
+X-Powered-By: PHP/7.0.17
+Cache-Control: no-cache, private
+Date: Sat, 08 Apr 2017 13:00:44 GMT
+
+[
+  {
+    "id": "1",
+    "description": "titulo de teste",
+    "message": "mensagem de teste"
+  },
+  {
+    "id": "2",
+    "description": "titulo de teste",
+    "message": "mensagem de teste"
+  },
+  {
+    "id": "3",
+    "description": "titulo de teste",
+    "message": "mensagem de teste"
+  }
+]
+```
+
+### Visualizar uma Task
+
+```
+GET /task/{id} HTTP/1.1
+Host: localhost
+Cache-Control: no-cache
+```
+
+```bash
+$ curl -X GET localhost/task/{id} -i
+
+HTTP/1.1 200 OK
+Server: nginx/1.6.2
+Content-Type: application/json
+Transfer-Encoding: chunked
+Connection: keep-alive
+X-Powered-By: PHP/7.0.17
+Cache-Control: no-cache, private
+Date: Sat, 08 Apr 2017 12:59:21 GMT
+
+{
+  "id": "1",
+  "description": "titulo de teste",
+  "message": "mensagem de teste",
+  "tags": [
+    {
+      "id": "4",
+      "title": "tagatualizada",
+      "color": "#FFFFF"
+    },
+    {
+      "id": "5",
+      "title": "urgente",
+      "color": "#000000"
+    }
+  ]
+}
+```
+
+Criar uma task 
+
+```bash
+$ curl -X POST -H "Content-Type:application/json" -d '{"titulo":"titulo de teste", "mensagem":"mensagem de teste"}' localhost/task/ -i
+
+HTTP/1.1 201 Created
+Server: nginx/1.6.2
+Content-Type: application/json
+Transfer-Encoding: chunked
+Connection: keep-alive
+X-Powered-By: PHP/7.0.17
+Cache-Control: no-cache, private
+Date: Sat, 08 Apr 2017 12:21:47 GMT
+
+{"id":"1","message":"mensagem de teste","description":"titulo de teste"}
+```
+
+### Criar uma tag 
+
+```json
+POST /tag/ HTTP/1.1
+Host: localhost
+Content-Type: application/json
+Cache-Control: no-cache
+
+{
+	"color":"#000000",
+	"title":"urgente"
+}
+```
+
+```bash
+$ curl -X POST -H "Content-Type:application/json" -d '{"title":"urgente", "color":"#000000"}' localhost/tag/ -i
+
+HTTP/1.1 201 Created
+Server: nginx/1.6.2
+Content-Type: application/json
+Transfer-Encoding: chunked
+Connection: keep-alive
+X-Powered-By: PHP/7.0.17
+Cache-Control: no-cache, private
+Date: Sat, 08 Apr 2017 12:18:07 GMT
+
+{"id":4,"title":"urgente","color":"#000000"}
+```
+
+### Edita uma tag
+
+```json
+PUT /tag/{id) HTTP/1.1
+Host: localhost
+Content-Type: application/json
+Cache-Control: no-cache
+
+{
+	"color":"#FFFFF",
+	"title":"tagatualizada"
+}
+```
+
+```bash
+$ curl -X PUT -H "Content-Type:application/json" -d '{"title":"tagatualizada", "color":"#FFFFF"}' localhost/tag/{id_tag}
+
+HTTP/1.1 200 OK
+Server: nginx/1.6.2
+Content-Type: application/json
+Transfer-Encoding: chunked
+Connection: keep-alive
+X-Powered-By: PHP/7.0.17
+Cache-Control: no-cache, private
+Date: Sat, 08 Apr 2017 12:19:42 GMT
+
+{"id":"4","title":"tagatualizada","color":"#FFFFF"}
+```
+
+### Deletar uma Tag
+
+```json
+DELETE /tag/{id} HTTP/1.1
+Host: localhost
+Content-Type: application/json
+Cache-Control: no-cache
+```
+
+```bash
+curl -X DELETE -H "Content-Type:application/json" localhost/tag/{id} -i
+
+HTTP/1.1 204 No Content
+Server: nginx/1.6.2
+Content-Type: text/html; charset=UTF-8
+Connection: keep-alive
+X-Powered-By: PHP/7.0.17
+Cache-Control: no-cache, private
+Date: Sat, 08 Apr 2017 12:16:34 GMT
+```
+
 
 * Testes

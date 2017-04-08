@@ -1,4 +1,4 @@
 name: UPX TestePHP Migration
-migrations_namespace: App\Migrations
+migrations_namespace: Acme\Migrations
 table_name: upx_migrations
 migrations_directory: ./src/Migrations
