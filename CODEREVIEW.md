@@ -415,5 +415,31 @@ Cache-Control: no-cache, private
 Date: Sat, 08 Apr 2017 12:16:34 GMT
 ```
 
+### Anexar uma Tag
+
+```json
+POST /task/anexar HTTP/1.1
+Host: localhost
+Content-Type: application/json
+Cache-Control: no-cache
+
+{
+	"id":"1",
+	"tag":"23"
+}
+```
+
+```bash
+curl -X POST -H "Content-Type:application/json" localhost/task/anexar -i
+
+HTTP/1.1 200 OK
+Server: nginx/1.6.2
+Content-Type: text/html; charset=UTF-8
+Connection: keep-alive
+X-Powered-By: PHP/7.0.17
+Cache-Control: no-cache, private
+Date: Sat, 08 Apr 2017 12:16:34 GMT
+```
+
 
 * Testes
