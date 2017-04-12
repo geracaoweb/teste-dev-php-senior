@@ -90,6 +90,12 @@ class TaskController implements ControllerProviderInterface {
             }
 
             $anexo = (new TaskModel())->anexarTag((int) $data->id, (int) $data->tag);
+            
+            if ($anexo) {
+                return $app->json($anexo, 200);
+            } else {
+                return $app->json("Erro ao anexar a Tag", 500);
+            }
   
         });
         
