@@ -82,5 +82,11 @@ class TaskModel extends Model {
       );
     
     $result = $this->execute($query);
+    
+    if ($result) {
+      return $this->findrow($id_task); 
+    } else {
+      return false;
+    }
   }
 }
