@@ -31,10 +31,10 @@ class TagsApiTest extends WebTestCase {
      */
     public function testList() {
         $client = $this->createClient();
-        $client->request('GET', '/task/');
-        
+        $client->request('GET', '/task');
+        var_dump($client->getResponse()); 
         $response = json_decode($client->getResponse()->getContent());
-                
+        var_dump($response); die();
         $this->assertEquals(200, $client->getInternalResponse()->getStatus());
         $this->assertEquals('application/json', $client->getInternalResponse()->getHeaders()['content-type'][0]);
     }

@@ -1,4 +1,7 @@
 <?php
+
+require_once __DIR__.'/../../vendor/autoload.php';
+
 use Silex\Application;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -7,8 +10,10 @@ use Doctrine\DBAL\Query\QueryBuilder;
 use Acme\System\Model;
 
 date_default_timezone_set('UTC');
-require_once __DIR__.'/../../vendor/autoload.php';
 
+/**
+ * Initial Setup Application
+ */
 $app = new Application();
 $app['debug'] = True;
 
@@ -39,9 +44,16 @@ $app->before(function (Request $request) {
  * [$error Vai customizar a devolução de erros das Exceptions em formato JSON]
  */
 $app->error(function (\Exception $e, Request $request, $code) use ($app) {
-  $error = array("msg" => $e->getMessage(), 'status' => $e->getCode());
-  return $app->json($error, $e->getCode());
+  $code = $e->getCode() ? $e->getCode() : 500;
+  $error = array("msg" => $e->getMessage(), 'status' => $code);
+  return $app->json($error, $code);
 });
 
 Model::$db = $app['db'];
+
+/**
+ * Routes 
+ */
+require_once __DIR__ . '/Routes.php'; 
+
 return $app;
